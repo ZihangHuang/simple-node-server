@@ -3,6 +3,7 @@ const path = require("path");
 const koaStatic = require("koa-static");
 const Router = require("koa-router");
 const bodyParser = require("koa-bodyparser");
+const { historyApiFallback } = require('koa2-connect-history-api-fallback');
 const upload = require("./controller/upload");
 const multer = require("@koa/multer");
 
@@ -28,9 +29,9 @@ app.use(async (ctx, next) => {
   }
 });
 
-router.get("/", (ctx) => {
-  ctx.body = "简单静态服务器";
-});
+// router.get("/", (ctx) => {
+//   ctx.body = "简单静态服务器";
+// });
 
 router.get("/err", (ctx) => {
   throw new Error();
@@ -39,6 +40,8 @@ router.get("/err", (ctx) => {
 router.post("/upload", multer().single("file"), upload);
 
 app.use(router.routes()).use(router.allowedMethods());
+
+app.use(historyApiFallback());
 
 app.use(
   koaStatic(path.resolve(__dirname, "../static"), {
