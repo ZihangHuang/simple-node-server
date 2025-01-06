@@ -4,7 +4,8 @@ const koaStatic = require("koa-static");
 const Router = require("koa-router");
 const bodyParser = require("koa-bodyparser");
 const { historyApiFallback } = require('koa2-connect-history-api-fallback');
-const upload = require("./controller/upload");
+const upload = require("./controllers/upload");
+const corsHandle = require('./middlewares/cors-handle')
 const multer = require("@koa/multer");
 
 const app = new Koa();
@@ -28,6 +29,8 @@ app.use(async (ctx, next) => {
     }
   }
 });
+
+app.use(corsHandle)
 
 // router.get("/", (ctx) => {
 //   ctx.body = "简单静态服务器";
