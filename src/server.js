@@ -1,34 +1,34 @@
-const Koa = require("koa");
-const path = require("path");
-const koaStatic = require("koa-static");
-const Router = require("koa-router");
-const bodyParser = require("koa-bodyparser");
-const { historyApiFallback } = require('koa2-connect-history-api-fallback');
-const upload = require("./controllers/upload");
+const Koa = require('koa')
+const path = require('path')
+const koaStatic = require('koa-static')
+const Router = require('koa-router')
+const bodyParser = require('koa-bodyparser')
+const { historyApiFallback } = require('koa2-connect-history-api-fallback')
+const upload = require('./controllers/upload')
 const corsHandle = require('./middlewares/cors-handle')
-const multer = require("@koa/multer");
+const multer = require('@koa/multer')
 
-const app = new Koa();
-const router = new Router();
+const app = new Koa()
+const router = new Router()
 
-app.use(bodyParser({}));
+app.use(bodyParser({}))
 
 app.use(async (ctx, next) => {
   try {
-    await next();
+    await next()
 
     if (ctx.status === 404) {
-      ctx.throw(404);
+      ctx.throw(404)
     }
   } catch (err) {
-    const status = err.status || 500;
+    const status = err.status || 500
     if (status === 404) {
-      ctx.body = "404";
+      ctx.body = '404'
     } else {
-      ctx.body = "500";
+      ctx.body = '500'
     }
   }
-});
+})
 
 app.use(corsHandle)
 
@@ -36,28 +36,34 @@ app.use(corsHandle)
 //   ctx.body = "简单静态服务器";
 // });
 
-router.get("/err", (ctx) => {
-  throw new Error();
-});
+router.get('/err', (ctx) => {
+  throw new Error()
+})
 
-router.post("/upload", multer().single("file"), upload);
+router.post('/upload', multer().single('file'), upload)
 
-app.use(router.routes()).use(router.allowedMethods());
+app.use(router.routes()).use(router.allowedMethods())
 
-app.use(historyApiFallback());
+app.use(historyApiFallback())
 
-app.use(
-  koaStatic(path.resolve(__dirname, "../static"), {
-    setHeaders(res, path, stats) {
-      if (path.indexOf("mjs") > -1) {
-        res.setHeader("Content-Type", "text/javascript");
-      }
-    },
-  })
-);
+app.use(async (ctx, next) => {
+  if (ctx.path.startsWith('/api')) {
+    // 如果是 /api 路径，跳过静态资源中间件，直接执行后续中间件
+    await next()
+  } else {
+    // 非 /api 路径，执行静态资源中间件
+    await koaStatic(path.resolve(__dirname, '../static'), {
+      setHeaders(res, path, stats) {
+        if (path.indexOf('mjs') > -1) {
+          res.setHeader('Content-Type', 'text/javascript')
+        }
+      },
+    })(ctx, next)
+  }
+})
 
-const port = 7899;
+const port = 7899
 
-console.log(`listening at port: http://localhost:${port}`);
+console.log(`listening at port: http://localhost:${port}`)
 
-app.listen(port);
+app.listen(port)
